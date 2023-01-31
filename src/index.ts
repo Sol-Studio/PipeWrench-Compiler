@@ -119,7 +119,10 @@ const copyMake = (src: string, dest: string) => {
   fs.ensureDirSync(dest);
   fs.copySync(src, dest, { recursive: true });
 };
-
+const copyFile = (src: string, dest: string) => {
+  fs.ensureDirSync(dest.split(path.sep).slice(0, -1).join(path.sep));
+  fs.copyFileSync(src, dest);
+};
 class PipeWrenchPlugin implements tstl.Plugin {
   config: PipeWrenchConfig;
   constructor() {
@@ -156,23 +159,25 @@ class PipeWrenchPlugin implements tstl.Plugin {
       const modSubDir = path.join(options.outDir, this.config.modInfo.id);
       fs.ensureDirSync(modSubDir);
 
-      if (existsSync(this.config.modelsDir))
+      if (existsSync('./src/models'))
+        copyMake('./src/models', path.join(modSubDir, 'media', 'models'));
+      if (existsSync('./src/textures'))
+        copyMake('./src/textures', path.join(modSubDir, 'media', 'textures'));
+      if (existsSync('./src/sound'))
+        copyMake('./src/sound', path.join(modSubDir, 'media', 'sound'));
+      if (existsSync('./src/scripts'))
+        copyMake('./src/scripts', path.join(modSubDir, 'media', 'scripts'));
+      if (existsSync('./src/lua/shared/Translate'))
         copyMake(
-          this.config.modelsDir,
-          path.join(modSubDir, 'media', 'models')
-        );
-      if (existsSync(this.config.texturesDir))
-        copyMake(
-          this.config.texturesDir,
-          path.join(modSubDir, 'media', 'textures')
-        );
-      if (existsSync(this.config.soundDir))
-        copyMake(this.config.soundDir, path.join(modSubDir, 'media', 'sound'));
-      if (existsSync(this.config.scriptsDir))
-        copyMake(
-          this.config.scriptsDir,
+          './src/lua/shared/Translate',
           path.join(modSubDir, 'media', 'scripts')
         );
+      for (const file of this.config.copyFiles) {
+        copyFile(
+          file,
+          path.join(modSubDir, 'media', ...file.split('/').slice(2))
+        );
+      }
       const modInfoArray = Object.entries(this.config.modInfo).map(
         ([key, value]) => {
           return `${key}=${value}`;
@@ -182,12 +187,9 @@ class PipeWrenchPlugin implements tstl.Plugin {
       result.map((file) => {
         const { outDir } = options;
         if (outDir) {
-          file.outputPath = path.join(
-            modSubDir,
-            'media',
-            'lua',
-            path.relative(outDir, file.outputPath)
-          );
+          let o = path.relative(outDir, file.outputPath);
+          if (o.startsWith('lua\\')) o = o.slice(3);
+          file.outputPath = path.join(modSubDir, 'media', 'lua', o);
           handleFile(file);
         }
       });

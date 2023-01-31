@@ -10,10 +10,7 @@ export interface ModInfo {
 
 export interface PipeWrenchConfig {
   modInfo: ModInfo;
-  modelsDir: string;
-  texturesDir: string;
-  soundDir: string;
-  scriptsDir: string;
+  copyFiles: Array<string>;
 }
 export const PipeWrenchConfigSchema: JSONSchemaType<PipeWrenchConfig> = {
   type: 'object',
@@ -29,11 +26,8 @@ export const PipeWrenchConfigSchema: JSONSchemaType<PipeWrenchConfig> = {
       },
       required: ['name', 'poster', 'id', 'description', 'url']
     },
-    modelsDir: { type: 'string' },
-    texturesDir: { type: 'string' },
-    soundDir: { type: 'string' },
-    scriptsDir: { type: 'string' }
+    copyFiles: { type: 'array', items: { type: 'string' } }
   },
-  required: ['modInfo', 'modelsDir', 'texturesDir', 'soundDir', 'scriptsDir'],
+  required: ['modInfo'],
   additionalProperties: false
 };
